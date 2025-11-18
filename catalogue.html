@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogue - Imprixo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+
+        * {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .product-card {
+            transition: box-shadow 0.2s ease;
+        }
+
+        .product-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: #e63946;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #d62839;
+        }
+
+        .btn-secondary {
+            background: #2b2d42;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #1a1b2e;
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #e63946;
+            transition: width 0.2s ease;
+        }
+
+        .nav-link:hover:after {
+            width: 100%;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        .badge-red {
+            background: #fee;
+            color: #e63946;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e63946;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Icônes pour les catégories
+        const categoryIcons = {
+            'Supports rigides PVC': '📄',
+            'Supports aluminium premium': '✨',
+            'Supports rigides économiques': '🏷️',
+            'Supports plastiques alternatifs': '🔲',
+            'Supports plastiques premium': '💎',
+            'Supports transparents': '🔍',
+            'Textiles imprimables standard': '🎨',
+            'Bâches et supports souples': '🎪',
+            'Textiles rétroéclairés': '💡',
+            'Textiles écologiques': '🌿'
+        };
+
+        // Fonction pour charger les produits depuis l'API
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/produits.php');
+                if (!response.ok) throw new Error('Erreur chargement produits');
+                const data = await response.json();
+                return data.produits || [];
+            } catch (error) {
+                console.error('Erreur:', error);
+                return [];
+            }
+        }
+
+        // Fonction pour obtenir le panier depuis localStorage
+        function getCart() {
+            try {
+                return JSON.parse(localStorage.getItem('visuprint_cart') || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        // Header
+        function Header({ cartCount }) {
+            return (
+                <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <a href="/">
+                                        <span className="text-2xl font-black text-gray-900">Imprixo</span>
+                                        <span className="text-2xl font-black text-red-600">Pro</span>
+                                    </a>
+                                </div>
+                                <nav className="hidden md:ml-10 md:flex md:space-x-8">
+                                    <a href="/" className="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+                                        Accueil
+                                    </a>
+                                    <a href="/catalogue.html" className="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+                                        Catalogue
+                                    </a>
+                                    <a href="/mon-compte.php" className="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+                                        Mon compte
+                                    </a>
+                                </nav>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                <div className="hidden md:block text-right">
+                                    <div className="text-xs text-gray-500">Service client</div>
+                                    <div className="text-sm font-bold text-gray-900">01 23 45 67 89</div>
+                                </div>
+                                <a href="/panier.html" className="relative btn-secondary text-white px-4 py-2 rounded text-sm font-semibold">
+                                    🛒 Panier
+                                    {cartCount > 0 && (
+                                        <span className="cart-badge">{cartCount}</span>
+                                    )}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        }
+
+        // Carte produit
+        function ProductCard({ product }) {
+            const minPrice = parseFloat(product.prix_300_plus) || parseFloat(product.prix_101_300) || parseFloat(product.prix_51_100) || parseFloat(product.prix_11_50) || parseFloat(product.prix_0_10);
+            const maxPrice = parseFloat(product.prix_0_10);
+            const maxSavings = maxPrice > 0 && minPrice > 0 ? Math.round((1 - minPrice / maxPrice) * 100) : 0;
+
+            return (
+                <div className="product-card bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer"
+                     onClick={() => window.location.href = `/produit.html?code=${product.code_produit}`}>
+                    <div className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                                <div className="text-3xl mb-2">{categoryIcons[product.categorie] || '📄'}</div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                                    {product.nom}
+                                </h3>
+                                <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">
+                                    {product.categorie}
+                                </p>
+                            </div>
+                            {maxSavings > 0 && (
+                                <span className="badge badge-red">
+                                    jusqu'à -{maxSavings}%
+                                </span>
+                            )}
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-4">
+                            {product.description_courte}
+                        </p>
+
+                        <div className="border-t border-gray-100 pt-4 mb-4">
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <span className="text-gray-500">Épaisseur:</span>
+                                    <span className="ml-1 font-semibold">{product.epaisseur}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500">Usage:</span>
+                                    <span className="ml-1 font-semibold">{product.usage?.split('/')[0]}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <div className="text-xs text-gray-500 mb-1">À partir de</div>
+                                <div className="text-2xl font-black text-gray-900">
+                                    {minPrice.toFixed(2)}€
+                                    <span className="text-sm font-normal text-gray-500">/m²</span>
+                                </div>
+                            </div>
+                            <button className="btn-primary text-white px-6 py-2 rounded text-sm font-semibold">
+                                Configurer →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Composant principal
+        function App() {
+            const [products, setProducts] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [selectedCategory, setSelectedCategory] = useState('Tous');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [cartCount, setCartCount] = useState(0);
+
+            useEffect(() => {
+                loadProducts().then(data => {
+                    setProducts(data);
+                    setLoading(false);
+                });
+                setCartCount(getCart().length);
+            }, []);
+
+            // Extraire les catégories uniques
+            const categories = ['Tous', ...new Set(products.map(p => p.categorie))];
+
+            // Filtrer les produits
+            const filteredProducts = products.filter(product => {
+                const matchCategory = selectedCategory === 'Tous' || product.categorie === selectedCategory;
+                const matchSearch = product.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  product.description_courte.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchCategory && matchSearch;
+            });
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="text-6xl mb-4">📦</div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                Chargement du catalogue...
+                            </h2>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    <Header cartCount={cartCount} />
+
+                    {/* Catalogue */}
+                    <section className="py-12">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            {/* En-tête */}
+                            <div className="mb-10">
+                                <h1 className="text-3xl font-black text-gray-900 mb-3">
+                                    Notre catalogue complet
+                                </h1>
+                                <p className="text-lg text-gray-600">
+                                    {products.length} produits disponibles - Cliquez pour configurer votre commande
+                                </p>
+                            </div>
+
+                            {/* Barre de recherche */}
+                            <div className="mb-8">
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher un produit..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full max-w-md px-6 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent text-lg"
+                                />
+                            </div>
+
+                            {/* Filtres par catégorie */}
+                            <div className="mb-10 overflow-x-auto">
+                                <div className="flex gap-3 pb-4">
+                                    {categories.map((category) => (
+                                        <button
+                                            key={category}
+                                            onClick={() => setSelectedCategory(category)}
+                                            className={`px-6 py-3 rounded-lg font-semibold text-sm whitespace-nowrap transition ${
+                                                selectedCategory === category
+                                                    ? 'bg-red-600 text-white'
+                                                    : 'bg-white text-gray-700 border border-gray-300 hover:border-red-600'
+                                            }`}
+                                        >
+                                            {category === 'Tous' ? '📦' : categoryIcons[category] || '📄'} {category}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Grille de produits */}
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {filteredProducts.map((product) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                    />
+                                ))}
+                            </div>
+
+                            {filteredProducts.length === 0 && (
+                                <div className="text-center py-16">
+                                    <div className="text-6xl mb-4">🔍</div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                        Aucun produit trouvé
+                                    </h3>
+                                    <p className="text-gray-600">
+                                        Essayez de modifier vos filtres ou votre recherche
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Footer */}
+                    <footer className="bg-gray-900 text-gray-300 py-12">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid md:grid-cols-4 gap-8 mb-8">
+                                <div>
+                                    <div className="text-2xl font-black text-white mb-4">
+                                        Imprixo<span className="text-red-600">Pro</span>
+                                    </div>
+                                    <p className="text-sm text-gray-400">
+                                        Impression professionnelle grand format
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-white mb-4 text-sm">Produits</h4>
+                                    <ul className="space-y-2 text-sm">
+                                        <li><a href="#" className="hover:text-white">Panneaux rigides</a></li>
+                                        <li><a href="#" className="hover:text-white">Bâches & textiles</a></li>
+                                        <li><a href="#" className="hover:text-white">Supports aluminium</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-white mb-4 text-sm">Services</h4>
+                                    <ul className="space-y-2 text-sm">
+                                        <li><a href="#" className="hover:text-white">Conception graphique</a></li>
+                                        <li><a href="#" className="hover:text-white">Installation</a></li>
+                                        <li><a href="#" className="hover:text-white">Livraison express</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-white mb-4 text-sm">Contact</h4>
+                                    <ul className="space-y-2 text-sm">
+                                        <li className="font-bold text-white">01 23 45 67 89</li>
+                                        <li>contact@imprixo.fr</li>
+                                        <li className="text-gray-400">Du lundi au vendredi<br/>9h-18h</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                                © 2025 Imprixo - Tous droits réservés
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

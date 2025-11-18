@@ -1,0 +1,12 @@
+# VisuPrint Pro - Robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://visuprintpro.fr/sitemap.xml
+
+# Interdire les dossiers techniques
+Disallow: /admin/
+Disallow: /private/
+Disallow: /_*
+
+# Accélérer l'indexation
+Crawl-delay: 0

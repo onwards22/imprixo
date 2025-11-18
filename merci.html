@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commande confirmée - Imprixo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+        * { font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .btn-primary { background: #e63946; transition: all 0.2s ease; }
+        .btn-primary:hover { background: #d62839; }
+        .btn-secondary { background: #2b2d42; transition: all 0.2s ease; }
+        .btn-secondary:hover { background: #1a1b2e; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="/"><span class="text-2xl font-black text-gray-900">Imprixo</span><span class="text-2xl font-black text-red-600">Pro</span></a>
+            </div>
+        </div>
+    </header>
+
+    <section class="py-12">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-lg p-12 text-center border border-gray-200">
+                <div class="text-8xl mb-6">✅</div>
+                <h1 class="text-4xl font-black text-gray-900 mb-4">Commande confirmée !</h1>
+                <p class="text-xl text-gray-600 mb-8">Merci pour votre confiance. Votre commande a bien été enregistrée.</p>
+
+                <div class="bg-gray-50 rounded-lg p-6 mb-8 text-left">
+                    <h2 class="font-bold text-gray-900 mb-4">Prochaines étapes</h2>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3">
+                            <span class="text-2xl">📧</span>
+                            <div>
+                                <div class="font-semibold">Confirmation par email</div>
+                                <div class="text-sm text-gray-600">Vous allez recevoir un email de confirmation avec tous les détails de votre commande</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-2xl">📁</span>
+                            <div>
+                                <div class="font-semibold">Envoi de vos fichiers</div>
+                                <div class="text-sm text-gray-600">Vous pouvez envoyer vos fichiers d'impression via le lien dans l'email</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-2xl">🖨️</span>
+                            <div>
+                                <div class="font-semibold">Production</div>
+                                <div class="text-sm text-gray-600">Nous lançons la production sous 24-48h après réception de vos fichiers</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-2xl">📦</span>
+                            <div>
+                                <div class="font-semibold">Livraison</div>
+                                <div class="text-sm text-gray-600">Livraison express en 48-72h ouvrés</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/mon-compte.php" class="btn-primary text-white px-8 py-4 rounded font-bold text-lg inline-block">
+                        Suivre ma commande
+                    </a>
+                    <a href="/catalogue.html" class="btn-secondary text-white px-8 py-4 rounded font-bold text-lg inline-block">
+                        Continuer mes achats
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                <h3 class="font-bold text-gray-900 mb-3">Besoin d'aide ?</h3>
+                <p class="text-gray-700 mb-4">Notre équipe est à votre disposition pour toute question sur votre commande.</p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">📞</span>
+                        <div>
+                            <div class="text-sm text-gray-600">Téléphone</div>
+                            <div class="font-bold text-gray-900">01 23 45 67 89</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">📧</span>
+                        <div>
+                            <div class="text-sm text-gray-600">Email</div>
+                            <div class="font-bold text-gray-900">contact@imprixo.fr</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-gray-300 py-12 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-2xl font-black text-white mb-4">Imprixo<span class="text-red-600">Pro</span></div>
+                    <p class="text-sm text-gray-400">Impression professionnelle grand format</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white mb-4 text-sm">Produits</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white">Panneaux rigides</a></li>
+                        <li><a href="#" class="hover:text-white">Bâches & textiles</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white mb-4 text-sm">Services</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white">Conception graphique</a></li>
+                        <li><a href="#" class="hover:text-white">Installation</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white mb-4 text-sm">Contact</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li class="font-bold text-white">01 23 45 67 89</li>
+                        <li>contact@imprixo.fr</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">© 2025 Imprixo - Tous droits réservés</div>
+        </div>
+    </footer>
+
+    <script>
+        // Nettoyer le panier au chargement
+        localStorage.removeItem('visuprint_cart');
+    </script>
+</body>
+</html>

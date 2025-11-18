@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finaliser la commande - Imprixo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+        * { font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .btn-primary { background: #e63946; transition: all 0.2s ease; }
+        .btn-primary:hover { background: #d62839; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function getCart() {
+            try { return JSON.parse(localStorage.getItem('visuprint_cart') || '[]'); }
+            catch { return []; }
+        }
+
+        function Header() {
+            return (
+                <header className="bg-white border-b border-gray-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <a href="/"><span className="text-2xl font-black text-gray-900">Imprixo</span><span className="text-2xl font-black text-red-600">Pro</span></a>
+                        </div>
+                    </div>
+                </header>
+            );
+        }
+
+        function App() {
+            const [cart, setCart] = useState([]);
+            const [formData, setFormData] = useState({ prenom: '', nom: '', email: '', telephone: '', adresse: '', code_postal: '', ville: '', pays: 'France', adresse_livraison: '', code_postal_livraison: '', ville_livraison: '', commentaire: '', livraison_different: false, cgv_accept: false });
+            const [submitting, setSubmitting] = useState(false);
+
+            useEffect(() => {
+                const c = getCart();
+                if (c.length === 0) window.location.href = '/panier.html';
+                setCart(c);
+            }, []);
+
+            const totalHT = cart.reduce((sum, item) => sum + (item.price * item.quantity / 1.2), 0);
+            const totalTVA = cart.reduce((sum, item) => sum + (item.price * item.quantity - item.price * item.quantity / 1.2), 0);
+            const totalTTC = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!formData.cgv_accept) { alert('Vous devez accepter les CGV'); return; }
+                setSubmitting(true);
+
+                try {
+                    const orderData = {
+                        client: { prenom: formData.prenom, nom: formData.nom, email: formData.email, telephone: formData.telephone },
+                        adresse_facturation: formData.adresse,
+                        code_postal_facturation: formData.code_postal,
+                        ville_facturation: formData.ville,
+                        pays_facturation: formData.pays,
+                        adresse_livraison: formData.livraison_different ? formData.adresse_livraison : formData.adresse,
+                        code_postal_livraison: formData.livraison_different ? formData.code_postal_livraison : formData.code_postal,
+                        ville_livraison: formData.livraison_different ? formData.ville_livraison : formData.ville,
+                        pays_livraison: formData.pays,
+                        commentaire: formData.commentaire,
+                        items: cart
+                    };
+
+                    const response = await fetch('/api/commandes.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        const paymentResponse = await fetch('/api/paiement.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ commande_id: result.commande_id })
+                        });
+                        const paymentResult = await paymentResponse.json();
+                        if (paymentResult.url) {
+                            localStorage.removeItem('visuprint_cart');
+                            window.location.href = paymentResult.url;
+                        }
+                    }
+                } catch (error) {
+                    alert('Erreur: ' + error.message);
+                    setSubmitting(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    <Header />
+                    <section className="py-12">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <h1 className="text-3xl font-black text-gray-900 mb-8">Finaliser la commande</h1>
+                            <div className="grid lg:grid-cols-3 gap-8">
+                                <form onSubmit={handleSubmit} className="lg:col-span-2 bg-white rounded-lg p-8 border border-gray-200">
+                                    <h3 className="font-bold text-gray-900 mb-6">Informations de facturation</h3>
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div><label className="block text-sm font-semibold text-gray-700 mb-2">Prénom *</label><input type="text" required value={formData.prenom} onChange={(e) => setFormData({...formData, prenom: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                        <div><label className="block text-sm font-semibold text-gray-700 mb-2">Nom *</label><input type="text" required value={formData.nom} onChange={(e) => setFormData({...formData, nom: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                    </div>
+                                    <div className="mb-4"><label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label><input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                    <div className="mb-4"><label className="block text-sm font-semibold text-gray-700 mb-2">Téléphone *</label><input type="tel" required value={formData.telephone} onChange={(e) => setFormData({...formData, telephone: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                    <div className="mb-4"><label className="block text-sm font-semibold text-gray-700 mb-2">Adresse *</label><input type="text" required value={formData.adresse} onChange={(e) => setFormData({...formData, adresse: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                    <div className="grid grid-cols-3 gap-4 mb-4">
+                                        <div><label className="block text-sm font-semibold text-gray-700 mb-2">Code postal *</label><input type="text" required value={formData.code_postal} onChange={(e) => setFormData({...formData, code_postal: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                        <div className="col-span-2"><label className="block text-sm font-semibold text-gray-700 mb-2">Ville *</label><input type="text" required value={formData.ville} onChange={(e) => setFormData({...formData, ville: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                    </div>
+                                    <div className="mb-6"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.livraison_different} onChange={(e) => setFormData({...formData, livraison_different: e.target.checked})} className="w-5 h-5" /><span>Livraison à une adresse différente</span></label></div>
+                                    {formData.livraison_different && (
+                                        <div className="mb-6 p-6 bg-gray-50 rounded-lg">
+                                            <h4 className="font-bold text-gray-900 mb-4">Adresse de livraison</h4>
+                                            <div className="mb-4"><input type="text" placeholder="Adresse" value={formData.adresse_livraison} onChange={(e) => setFormData({...formData, adresse_livraison: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                            <div className="grid grid-cols-3 gap-4">
+                                                <div><input type="text" placeholder="Code postal" value={formData.code_postal_livraison} onChange={(e) => setFormData({...formData, code_postal_livraison: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                                <div className="col-span-2"><input type="text" placeholder="Ville" value={formData.ville_livraison} onChange={(e) => setFormData({...formData, ville_livraison: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" /></div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="mb-6"><label className="block text-sm font-semibold text-gray-700 mb-2">Commentaire</label><textarea value={formData.commentaire} onChange={(e) => setFormData({...formData, commentaire: e.target.value})} rows="3" className="w-full px-4 py-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Instructions de livraison..."></textarea></div>
+                                    <div className="mb-6"><label className="flex items-start gap-3 cursor-pointer"><input type="checkbox" required checked={formData.cgv_accept} onChange={(e) => setFormData({...formData, cgv_accept: e.target.checked})} className="w-5 h-5 mt-1" /><span>J'accepte les conditions générales de vente *</span></label></div>
+                                    <button type="submit" disabled={submitting} className="w-full btn-primary text-white py-4 rounded font-bold text-lg">{submitting ? 'Traitement...' : 'Procéder au paiement'}</button>
+                                </form>
+                                <div className="lg:col-span-1">
+                                    <div className="bg-white rounded-lg p-6 border border-gray-200 sticky top-24">
+                                        <h3 className="font-bold text-gray-900 mb-4">Votre commande</h3>
+                                        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                                            {cart.map((item, i) => (
+                                                <div key={i} className="text-sm"><div className="font-bold">{item.name}</div><div className="text-gray-600">{item.surface} m² × {item.quantity} = {(item.price * item.quantity).toFixed(2)}€</div></div>
+                                            ))}
+                                        </div>
+                                        <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
+                                            <div className="flex justify-between text-sm"><span>Sous-total HT:</span><span className="font-bold">{totalHT.toFixed(2)}€</span></div>
+                                            <div className="flex justify-between text-sm"><span>TVA (20%):</span><span className="font-bold">{totalTVA.toFixed(2)}€</span></div>
+                                            <div className="flex justify-between text-sm"><span>Livraison:</span><span className="font-bold text-green-600">Gratuite</span></div>
+                                        </div>
+                                        <div className="flex justify-between items-center"><span className="text-lg font-bold">Total TTC:</span><span className="text-2xl font-black text-red-600">{totalTTC.toFixed(2)}€</span></div>
+                                        <div className="mt-6 p-4 bg-gray-50 rounded text-sm text-gray-600"><strong>Paiement sécurisé Stripe</strong><br/>Vous serez redirigé vers notre plateforme de paiement sécurisée.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
